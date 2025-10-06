@@ -79,7 +79,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             children: [
               const Center(
                 child: Text('설정',
-                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.green)),
+                    style: TextStyle(fontSize: 24, fontFamily: 'Gamwulchi', fontWeight: FontWeight.bold, color: Colors.green)),
               ),
               const SizedBox(height: 24),
               const Center(child: Icon(Icons.account_circle, size: 60)),

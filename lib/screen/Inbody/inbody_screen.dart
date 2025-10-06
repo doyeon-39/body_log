@@ -171,9 +171,7 @@ class _InbodyScreenState extends State<InbodyScreen> {
       appBar: AppBar(
         title: const Text('인바디 정보 입력'),
         centerTitle: true,
-        backgroundColor: Colors.green[700],
-        foregroundColor: Colors.white,
-      ),
+        backgroundColor: Colors.white,),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),

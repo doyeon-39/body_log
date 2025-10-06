@@ -3,17 +3,8 @@ import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-
+import 'recommend_workout_screen.dart';
 import 'today_workout_screen.dart';
-
-// 초(int)를 "mm:ss"로 포맷
-String formatDuration(int seconds) {
-  final minutes = seconds ~/ 60;           // 몫: 분
-  final remainingSeconds = seconds % 60;   // 나머지: 초
-  final mm = minutes.toString().padLeft(2, '0');
-  final ss = remainingSeconds.toString().padLeft(2, '0');
-  return '$mm:$ss';
-}
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -28,16 +19,13 @@ class _HomeScreenState extends State<HomeScreen> {
   final DateTime now = DateTime.now();
   late final String today = DateFormat('yyyy.MM.dd').format(now);
 
-  // NOTE: 플랭크 시간은 "초" 단위로 내려온다고 가정하면 UI가 mm:ss로 표시됨.
+  // NOTE: 시간 및 피드백 필드 제거됨. 횟수 기반 데이터만 사용
   final exerciseData = {
     'name': '스쿼트',
     'count': 20,
     'calories': 80,
-    'time': 10, // 플랭크일 때 초 단위 값 사용 권장(예: 125)
     'accuracy': 85,
-    'issues': ['무릎이 너무 튀어나옴', '자세가 불안정함'],
   };
-
   @override
   void initState() {
     super.initState();
@@ -141,6 +129,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: const Text(
                   'Main Home', // 고정 타이틀
                   style: TextStyle(
+                    fontFamily: 'Gamwulchi',
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
                     color: Colors.green,
@@ -150,22 +139,17 @@ class _HomeScreenState extends State<HomeScreen> {
               GestureDetector(
                 onTap: () {
                   final String exName = exerciseData['name'] as String;
-                  final bool isPlank = exName == '플랭크';
-
                   final int? countVal = (exerciseData['count'] as int?);
-                  final int? timeVal  = (exerciseData['time'] as int?);
 
                   Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (context) => TodayWorkoutScreen(
                         name: exName,
-                        count: isPlank ? null : countVal, // 플랭크면 횟수 null
+                        count: countVal, // ✅ count 인자 전달
                         calories: exerciseData['calories'] as int,
-                        time: isPlank ? timeVal : null,   // 플랭크는 초 단위 전달, 그 외 null
                         accuracy: exerciseData['accuracy'] as int,
                         date: today,
-                        issues: List<String>.from(exerciseData['issues'] as List),
                       ),
                     ),
                   );
@@ -181,19 +165,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Builder(
                     builder: (context) {
                       final String exName = exerciseData['name'] as String;
-                      final bool isPlank = exName == '플랭크';
-
                       final int? countVal = (exerciseData['count'] as int?);
-                      final int? timeVal  = (exerciseData['time'] as int?);
 
-                      final String countLabel = isPlank
-                          ? '-'                         // 플랭크는 횟수 '-'
-                          : (countVal != null ? '${countVal}회' : '-');
-
-                      // 플랭크: 초 → mm:ss, 그 외: '-'
-                      final String timeLabel = isPlank
-                          ? (timeVal != null ? formatDuration(timeVal) : '-')
-                          : '-';
+                      // 횟수 표시 로직 정의 (countLabel 사용을 위해)
+                      final String countLabel = (countVal != null ? '${countVal}회' : '-');
 
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.center,
@@ -203,9 +178,8 @@ class _HomeScreenState extends State<HomeScreen> {
                             style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                           ),
                           const SizedBox(height: 8),
-                          Text('🏋️ $exName $countLabel'),
+                          Text('🏋️ $exName $countLabel'), // ✅ countLabel 사용
                           Text('🔥 칼로리 소모: ${exerciseData['calories']} kcal'),
-                          Text('⏱ 운동 시간: $timeLabel'),
                         ],
                       );
                     },
@@ -230,21 +204,30 @@ class _HomeScreenState extends State<HomeScreen> {
                     const Text('하체 집중 → 런지 20회'),
                     const SizedBox(height: 12),
                     ElevatedButton(
-                      onPressed: () {
-                        Navigator.pushNamed(context, '/recommend');
-                      },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green[700],
-                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                        padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
+                        backgroundColor: Colors.green,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(24),
+                          borderRadius: BorderRadius.circular(30),
                         ),
+                        elevation: 3,
                       ),
                       child: const Text(
                         '운동하러 가기',
-                        style: TextStyle(color: Colors.white),
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.white,
+                        ),
                       ),
-                    ),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => RecommendWorkoutScreen(),
+                          ),
+                        );
+                      },
+                    )
                   ],
                 ),
               ),
@@ -286,8 +269,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
           if (index == 0 && currentRoute != '/home') {
             Navigator.pushNamed(context, '/home');
-          } else if (index == 1 && currentRoute != '/exercise_category') {
-            Navigator.pushNamed(context, '/exercise_category');
+          } else if (index == 1 && currentRoute != '/video_upload') {
+            Navigator.pushNamed(context, '/video_upload');
           } else if (index == 2 && currentRoute != '/history') {
             Navigator.pushNamed(context, '/history');
           } else if (index == 3 && currentRoute != '/settings') {

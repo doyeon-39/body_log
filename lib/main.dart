@@ -18,13 +18,8 @@ import 'screen/profile/setting_screen.dart';
 import 'screen/Inbody/inbody_screen.dart';
 
 import 'screen/video/video_upload_screen.dart';
-import 'screen/video/video_analysis_screen.dart';
+
 import 'screen/home/recommend_workout_screen.dart';
-
-import 'screen/video/exercise_category_screen.dart';
-
-
-
 
 void main() {
   runApp(const BodyLogApp());
@@ -58,7 +53,12 @@ class BodyLogApp extends StatelessWidget {
         '/video_upload': (context) => const VideoUploadScreen(),
         '/recommend': (context) => RecommendWorkoutScreen(),
         '/verify_identity': (context) => const VerifyIdentityScreen(),
-        '/exercise_category': (context) => const ExerciseCategoryScreen(),
+        '/exercise_category': (context) => TodayWorkoutScreen(
+          name: '스쿼트',
+          calories: 0,
+          accuracy: 0,
+          date: '',
+          ),
       },
     );
   }

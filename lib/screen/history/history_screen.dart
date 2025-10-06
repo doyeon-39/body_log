@@ -55,20 +55,22 @@ class _HistoryScreenState extends State<HistoryScreen> {
     ];
   }
 
+  // ✅ 변경 2: 기준 날짜를 selectedDay로 변경
   Map<String, List<Map<String, dynamic>>> groupDataByDate() {
     Map<String, List<Map<String, dynamic>>> grouped = {};
-    final today = DateTime.now();
+    final base = selectedDay; // 기존: DateTime.now()
 
-    // 최근 7일 날짜 초기화
+    // 선택한 날짜 기준 최근 7일
     for (int i = 0; i < 7; i++) {
-      final date = DateFormat('yyyy.MM.dd').format(today.subtract(Duration(days: i)));
+      final date = DateFormat('yyyy.MM.dd').format(base.subtract(Duration(days: i)));
       grouped[date] = [];
     }
 
     for (var item in allData) {
       String date = item['date'];
       if (!grouped.containsKey(date)) {
-        grouped[date] = [];
+        // 선택 구간 밖은 제외
+        continue;
       }
       grouped[date]!.add(item);
     }
@@ -93,6 +95,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 const Text(
                   '운동 히스토리',
                   style: TextStyle(
+                    fontFamily: 'Gamwulchi',
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
                     color: Colors.green,
@@ -102,46 +105,55 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   icon: const Icon(Icons.calendar_today, color: Colors.green),
                   onPressed: () async {
                     DateTime tempSelectedDay = selectedDay;
+
+                    // ✅ 변경 1: StatefulBuilder로 다이얼로그 내부 로컬 setState 사용
                     await showDialog(
                       context: context,
-                      builder: (_) => AlertDialog(
-                        contentPadding: const EdgeInsets.all(12),
-                        content: SizedBox(
-                          width: MediaQuery.of(context).size.width * 0.9,
-                          height: 450,
-                          child: Column(
-                            children: [
-                              Expanded(
-                                child: TableCalendar(
-                                  focusedDay: tempSelectedDay,
-                                  firstDay: DateTime.utc(2020, 1, 1),
-                                  lastDay: DateTime.utc(2030, 12, 31),
-                                  selectedDayPredicate: (day) => isSameDay(day, tempSelectedDay),
-                                  onDaySelected: (day, _) {
-                                    setState(() => tempSelectedDay = day);
-                                  },
-                                ),
-                              ),
-                              const SizedBox(height: 10),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.end,
+                      builder: (_) => StatefulBuilder(
+                        builder: (context, setModalState) {
+                          return AlertDialog(
+                            contentPadding: const EdgeInsets.all(12),
+                            content: SizedBox(
+                              width: MediaQuery.of(context).size.width * 0.9,
+                              height: 450,
+                              child: Column(
                                 children: [
-                                  TextButton(
-                                    onPressed: () => Navigator.pop(context),
-                                    child: const Text('취소'),
+                                  Expanded(
+                                    child: TableCalendar(
+                                      focusedDay: tempSelectedDay,
+                                      firstDay: DateTime.utc(2020, 1, 1),
+                                      lastDay: DateTime.utc(2030, 12, 31),
+                                      selectedDayPredicate: (day) =>
+                                          isSameDay(day, tempSelectedDay),
+                                      onDaySelected: (day, _) {
+                                        setModalState(() {
+                                          tempSelectedDay = day; // 다이얼로그 로컬 상태 갱신
+                                        });
+                                      },
+                                    ),
                                   ),
-                                  TextButton(
-                                    onPressed: () {
-                                      setState(() => selectedDay = tempSelectedDay);
-                                      Navigator.pop(context);
-                                    },
-                                    child: const Text('확인'),
-                                  ),
+                                  const SizedBox(height: 10),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.end,
+                                    children: [
+                                      TextButton(
+                                        onPressed: () => Navigator.pop(context),
+                                        child: const Text('취소'),
+                                      ),
+                                      TextButton(
+                                        onPressed: () {
+                                          setState(() => selectedDay = tempSelectedDay); // 최종 반영
+                                          Navigator.pop(context);
+                                        },
+                                        child: const Text('확인'),
+                                      ),
+                                    ],
+                                  )
                                 ],
-                              )
-                            ],
-                          ),
-                        ),
+                              ),
+                            ),
+                          );
+                        },
                       ),
                     );
                   },
@@ -158,7 +170,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 List<Map<String, dynamic>> exercises = entry.value;
 
                 double averageAccuracy = exercises.isNotEmpty
-                    ? exercises.map((e) => e['accuracy'] as double).fold(0.0, (prev, val) => prev + val) / exercises.length
+                    ? exercises
+                    .map((e) => e['accuracy'] as double)
+                    .fold(0.0, (prev, val) => prev + val) /
+                    exercises.length
                     : 0.0;
 
                 return GestureDetector(

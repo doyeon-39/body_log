@@ -53,6 +53,7 @@ class RecommendWorkoutScreen extends StatelessWidget {
                 '주간 운동 루틴 추천',
                 style: TextStyle(
                   fontSize: 20,
+                  fontFamily: 'Gamwulchi',
                   fontWeight: FontWeight.bold,
                   color: Colors.green,
                 ),

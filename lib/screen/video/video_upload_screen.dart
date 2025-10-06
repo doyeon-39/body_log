@@ -29,7 +29,7 @@ class VideoUploadScreen extends StatelessWidget {
 
   Future<void> _uploadFile(BuildContext context, File videoFile, String exercise) async {
     final host = _baseHost();
-    final uri = Uri.parse('http://$host:8000/api/v1/exercise/upload');
+    final uri = Uri.parse('http://$host:8000/api/v1/exercise/analyze'); // 동기 분석 엔드포인트
 
     final request = http.MultipartRequest('POST', uri);
 
@@ -39,18 +39,31 @@ class VideoUploadScreen extends StatelessWidget {
       request.headers['Authorization'] = 'Bearer $token';
     }
 
-    request.fields['category'] = exercise;
+    // 파일만 전송 (서버에 영구 저장 없음)
     request.files.add(await http.MultipartFile.fromPath('file', videoFile.path));
 
     final streamed = await request.send();
     final resp = await http.Response.fromStream(streamed);
 
     if (resp.statusCode == 200) {
+      final data = jsonDecode(resp.body);
+
+      int _pickInt(dynamic v, {int fallback = 0}) {
+        if (v is int) return v;
+        if (v is double) return v.toInt();
+        if (v is String) return int.tryParse(v) ?? fallback;
+        return fallback;
+      }
+      final repCount = _pickInt(data['rep_count'] ?? data['count']);
+      final calories = _pickInt(data['calories']);
+
+      // 서버가 내려준 workout_id (필요 시 이후 화면/히스토리 연동에 사용 가능)
+      // final workoutId = _pickInt(data['workout_id']);
+
       if (!context.mounted) return;
 
-      // 업로드 성공 메시지
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('업로드 성공!')),
+        const SnackBar(content: Text('분석 완료!')),
       );
 
       Navigator.push(
@@ -58,17 +71,14 @@ class VideoUploadScreen extends StatelessWidget {
         MaterialPageRoute(
           builder: (_) => VideoAnalysisScreen(
             videoFile: videoFile,
-            exercise: exercise,
-            count: 10,
-            duration: '00:02',
-            calories: 20,
-            issues: const ['무릎이 너무 앞으로 나감'],
-            goodForm: const ['좋은 자세 입니다'],
+            exercise: exercise, // UI 표기용
+            count: repCount,
+            calories: calories,
           ),
         ),
       );
     } else {
-      final msg = '업로드 실패 (${resp.statusCode}) ${resp.body.isNotEmpty ? resp.body : ''}';
+      final msg = '분석 실패 (${resp.statusCode}) ${resp.body.isNotEmpty ? resp.body : ''}';
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
     }
@@ -135,8 +145,8 @@ class VideoUploadScreen extends StatelessWidget {
           final currentRoute = ModalRoute.of(context)?.settings.name;
           if (index == 0 && currentRoute != '/home') {
             Navigator.pushNamed(context, '/home');
-          } else if (index == 1 && currentRoute != '/exercise_category') {   // ← 고정
-            Navigator.pushNamed(context, '/exercise_category');
+          } else if (index == 1 && currentRoute != '/video_upload') {
+            Navigator.pushNamed(context, '/video_upload');
           } else if (index == 2 && currentRoute != '/history') {
             Navigator.pushNamed(context, '/history');
           } else if (index == 3 && currentRoute != '/settings') {
