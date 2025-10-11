@@ -1,4 +1,4 @@
-import 'dart:async'; // ← 추가: 폴링용 Timer
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -7,7 +7,7 @@ import 'package:http/http.dart' as http;
 import 'package:file_picker/file_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:camera/camera.dart';
-import 'video_analysis_screen.dart';
+import 'package:body_log/screen/home/today_workout_screen.dart';
 
 class VideoUploadScreen extends StatelessWidget {
   final String? exerciseName;
@@ -87,6 +87,22 @@ class VideoUploadScreen extends StatelessWidget {
     );
     if (recorded != null) {
       await _uploadFile(context, recorded, exercise);
+    }
+  }
+
+  // ===== [수정 2/3] 서버 코드 → 한글 운동명 변환 =====
+  String _localizeExercise(String? code) {
+    switch ((code ?? '').toLowerCase()) {
+      case 'squat':
+        return '스쿼트';
+      case 'pullup':
+        return '풀업';
+      case 'pushup':
+        return '푸쉬업';
+      case 'jumpingjack':
+        return '점핑잭';
+      default:
+        return '기타';
     }
   }
 
@@ -183,6 +199,7 @@ class VideoUploadScreen extends StatelessWidget {
       ),
     );
   }
+
   Future<void> _pollJobUntilDone(
       BuildContext context,
       String jobId,
@@ -234,7 +251,7 @@ class VideoUploadScreen extends StatelessWidget {
         timer?.cancel();
         final result = j['result'] as Map<String, dynamic>?;
 
-        await closeDialogAnd(() {
+        await closeDialogAnd(() async {
           if (result == null) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('결과가 비어있습니다.')),
@@ -242,31 +259,75 @@ class VideoUploadScreen extends StatelessWidget {
             return;
           }
 
+          // ✅ 서버 결과 파싱 (count, calories, accuracy, date)
           final int count = (() {
             final v = result['rep_count'];
             if (v is num) return v.toInt();
             return int.tryParse('$v') ?? 0;
           })();
 
+          // ===== [수정 3/3] 칼로리: 백엔드 실수값 반올림 후 정수로 =====
           final int calories = (() {
             final v = result['calories'];
-            if (v is num) return v.toInt();
-            return int.tryParse('$v') ?? 0;
+            if (v is num) return v.round();
+            final parsed = double.tryParse('$v');
+            return parsed == null ? 0 : parsed.round();
           })();
 
+          final int accuracy = (() {
+            final v = result['accuracy'] ?? result['posture_accuracy'] ?? 0;
+            if (v is num) return v.clamp(0, 100).toInt();
+            return (int.tryParse('$v') ?? 0).clamp(0, 100);
+          })();
+
+          final String date = (() {
+            final server = result['date']?.toString();
+            if (server != null && server.isNotEmpty) return server;
+            final now = DateTime.now();
+            final mm = now.month.toString().padLeft(2, '0');
+            final dd = now.day.toString().padLeft(2, '0');
+            return '${now.year}-$mm-$dd';
+          })();
+
+          // ===== [수정 2/3] 서버 exercise_type → 한글 표시명으로 변환 =====
+          final serverType = result['exercise_type']?.toString();
+          final String displayName = _localizeExercise(serverType);
+
+          // ✅ 기록 저장 (별도 모델 없이 바로 JSON 리스트에 append)
+          try {
+            const key = 'workout_records';
+            final raw = prefs.getString(key);
+            List<dynamic> list =
+            (raw == null || raw.isEmpty) ? [] : (jsonDecode(raw) as List);
+            // append
+            list.add({
+              'name': displayName,
+              'count': count,
+              'calories': calories,
+              'accuracy': accuracy,
+              'date': date,
+            });
+            await prefs.setString(key, jsonEncode(list));
+          } catch (_) {
+            // 저장 실패해도 화면 전환은 진행
+          }
+
+          // ✅ 분석 완료 후 TodayWorkoutScreen으로 이동
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (_) => VideoAnalysisScreen(
-                videoFile: localFile,
-                exercise: exercise,
+              builder: (_) => TodayWorkoutScreen(
+                name: displayName,           // ← 한글 이름으로 전달
                 count: count,
-                calories: calories,
+                calories: calories,          // ← 반올림된 정수
+                accuracy: accuracy,
+                date: date,
               ),
             ),
           );
         });
-      } else if (status == 'failed') {
+        // ===== [수정 1/3] 실패 상태 통합 처리: failed 또는 error 모두 처리 =====
+      } else if (status == 'failed' || status == 'error') {
         timer?.cancel();
         final err = j['error']?.toString() ?? '알 수 없는 오류';
         await closeDialogAnd(() {
@@ -275,6 +336,7 @@ class VideoUploadScreen extends StatelessWidget {
           );
         });
       } else {
+        // 진행중/대기중 - 아무 것도 하지 않음
       }
     });
 
