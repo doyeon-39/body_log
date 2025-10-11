@@ -37,7 +37,7 @@ class BodyLogApp extends StatelessWidget {
         primarySwatch: Colors.green,
         fontFamily: 'Pretendard',
       ),
-      initialRoute: '/home',
+      initialRoute: '/',
       routes: {
         '/': (context) => const SplashScreen(),
         '/login': (context) => const LoginScreen(),

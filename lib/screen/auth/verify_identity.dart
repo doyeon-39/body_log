@@ -4,7 +4,6 @@ import 'package:http/http.dart' as http;
 
 import '../../../UI/login_style.dart';
 import '../../../UI/input_field.dart';
-import '../../../UI/green_button.dart';
 import 'reset_password.dart';
 
 class VerifyIdentityScreen extends StatefulWidget {
@@ -78,7 +77,7 @@ class _VerifyIdentityScreenState extends State<VerifyIdentityScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: LoginStyle.backgroundColor,
+      backgroundColor: const Color(0xFF20221E),
       body: Center(
         child: SingleChildScrollView(
           child: Container(
@@ -96,11 +95,36 @@ class _VerifyIdentityScreenState extends State<VerifyIdentityScreen> {
                 InputField(controller: nameController, hint: '이름'),
                 InputField(controller: idController, hint: '아이디'),
                 InputField(controller: emailController, hint: '이메일'),
+
                 const SizedBox(height: 10),
+
+                // ✅ GreenButton 제거 → ElevatedButton으로 교체
                 isLoading
                     ? const CircularProgressIndicator()
-                    : GreenButton(text: '본인 확인', onPressed: verifyIdentity),
+                    : SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: ElevatedButton(
+                    onPressed: verifyIdentity,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF4E4E4E), // 통일된 버튼색
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: const Text(
+                      '본인 확인',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+
                 const SizedBox(height: 20),
+
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -109,12 +133,14 @@ class _VerifyIdentityScreenState extends State<VerifyIdentityScreen> {
                       onPressed: () => Navigator.pushNamed(context, '/login'),
                       child: const Text(
                         '로그인하기',
-                        style: TextStyle(color: Color(0xFF4A774F)),
+                        style: TextStyle(color: Color(0xFF000000)),
                       ),
                     ),
                   ],
                 ),
+
                 const SizedBox(height: 10),
+
                 GestureDetector(
                   onTap: () => Navigator.pushNamed(context, '/find_account'),
                   child: const Text(

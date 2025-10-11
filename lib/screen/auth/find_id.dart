@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../../../UI/login_style.dart';
 import '../../../UI/input_field.dart';
-import '../../../UI/green_button.dart';
 
 class FindIdScreen extends StatefulWidget {
   const FindIdScreen({super.key});
@@ -18,7 +17,6 @@ class _FindIdScreenState extends State<FindIdScreen> {
 
   void sendEmail() async {
     final email = emailController.text.trim();
-
     final url = Uri.parse('http://127.0.0.1:8000/auth/find-username?email=$email');
 
     final response = await http.get(url);
@@ -58,11 +56,11 @@ class _FindIdScreenState extends State<FindIdScreen> {
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: LoginStyle.backgroundColor,
+      backgroundColor: const Color(0xFF4E4E4E),
+
       body: Center(
         child: SingleChildScrollView(
           child: Container(
@@ -77,10 +75,34 @@ class _FindIdScreenState extends State<FindIdScreen> {
               children: [
                 const Text('아이디 찾기', style: LoginStyle.logoStyle),
                 const SizedBox(height: 20),
+
                 InputField(controller: nameController, hint: '이름'),
                 InputField(controller: emailController, hint: '가입시 작성한 이메일'),
-                GreenButton(text: '아이디 찾기', onPressed: sendEmail),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: ElevatedButton(
+                    onPressed: sendEmail,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF4E4E4E), // 버튼색
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: const Text(
+                      '아이디 찾기',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+
                 const SizedBox(height: 20),
+
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
                   color: Colors.white,
@@ -92,13 +114,15 @@ class _FindIdScreenState extends State<FindIdScreen> {
                         onPressed: () => Navigator.pushNamed(context, '/login'),
                         child: const Text(
                           '로그인하기',
-                          style: TextStyle(color: Color(0xFF4A774F)),
+                          style: TextStyle(color: Color(0xFF000000)),
                         ),
                       ),
                     ],
                   ),
                 ),
+
                 const SizedBox(height: 10),
+
                 GestureDetector(
                   onTap: () => Navigator.pushNamed(context, '/find_account'),
                   child: const Text(

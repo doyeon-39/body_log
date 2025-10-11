@@ -1,26 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-// 초(int)를 "mm:ss"로 포맷
-String formatDuration(int seconds) {
-  final minutes = seconds ~/ 60;           // 몫: 분
-  final remainingSeconds = seconds % 60;   // 나머지: 초
-  final mm = minutes.toString().padLeft(2, '0');
-  final ss = remainingSeconds.toString().padLeft(2, '0');
-  return '$mm:$ss';
-}
-
 class RecommendWorkoutScreen extends StatelessWidget {
   RecommendWorkoutScreen({super.key});
 
   final Map<String, List<Map<String, dynamic>>> weeklyWorkouts = {
     '2025-07-26': [
-      {'name': '런지', 'count': 20, 'calories': 80},
+      {'name': '풀업', 'count': 20, 'calories': 80},
       {'name': '스쿼트', 'count': 30, 'calories': 90},
     ],
     '2025-07-27': [
-      {'name': '풀 업', 'count': 20, 'calories': 80},
-      {'name': '푸쉬 업', 'count': 20, 'calories': 80},
+      {'name': '점핑잭', 'count': 20, 'calories': 80},
+      {'name': '푸쉬업', 'count': 20, 'calories': 80},
     ],
   };
 
@@ -29,13 +20,14 @@ class RecommendWorkoutScreen extends StatelessWidget {
     final weekday = ['월', '화', '수', '목', '금', '토', '일'][date.weekday - 1];
     return DateFormat('MM/dd').format(date) + ' ($weekday)';
   }
-
   String getImagePath(String name) {
-    if (name.contains('런지')) return 'assets/lunge.png';
-    if (name.contains('스쿼트')) return 'assets/squat.png';
-    if (name.contains('푸쉬')) return 'assets/pushup.png';
-    if (name.contains('풀')) return 'assets/pushup.png';
-    return 'assets/default.png';
+    final n = name.replaceAll(' ', ''); 
+    if (n.contains('스쿼트')) return 'assets/squat.png';
+    if (n.contains('풀업')) return 'assets/pullup.png';
+    if (n.contains('푸쉬업')) return 'assets/pushup.png';
+    if (n.contains('점핑잭')) return 'assets/jumping_jack.png';
+
+    return 'assets/logo2.png';
   }
 
   @override
@@ -43,22 +35,28 @@ class RecommendWorkoutScreen extends StatelessWidget {
     final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
 
     return Scaffold(
-      backgroundColor: const Color(0xfff0f8ee),
+      backgroundColor: const Color(0xFF20221E),
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: const Text(
+          '주간 운동 루틴 추천',
+          style: TextStyle(
+            fontSize: 20,
+            fontFamily: 'Gamwulchi',
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+      ),
       body: SafeArea(
         child: Column(
           children: [
-            const SizedBox(height: 20),
-            const Center(
-              child: Text(
-                '주간 운동 루틴 추천',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontFamily: 'Gamwulchi',
-                  fontWeight: FontWeight.bold,
-                  color: Colors.green,
-                ),
-              ),
-            ),
             const SizedBox(height: 16),
             Expanded(
               child: ListView(
@@ -85,6 +83,7 @@ class RecommendWorkoutScreen extends StatelessWidget {
                               style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
+                                color: Colors.white, // ✅ 날짜 글씨 흰색
                               ),
                             ),
                           ],
@@ -94,7 +93,8 @@ class RecommendWorkoutScreen extends StatelessWidget {
                           final imagePath = getImagePath(workout['name']);
                           return Container(
                             margin: const EdgeInsets.symmetric(vertical: 6),
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 12),
                             decoration: BoxDecoration(
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(16),
@@ -107,9 +107,11 @@ class RecommendWorkoutScreen extends StatelessWidget {
                                     Image.asset(imagePath, width: 28, height: 28),
                                     const SizedBox(width: 8),
                                     Text(() {
-                                      final isPlank = workout['name'].toString().contains('플랭크');
-                                      final countLabel = isPlank ? '-' : '${workout['count']}회';
-                                      return '${workout['name']} $countLabel';
+                                      final n = workout['name'].toString();
+                                      final isPlank = n.contains('플랭크'); // 기존 로직 유지
+                                      final countLabel =
+                                      isPlank ? '-' : '${workout['count']}회';
+                                      return '$n $countLabel';
                                     }()),
                                   ],
                                 ),
@@ -129,15 +131,15 @@ class RecommendWorkoutScreen extends StatelessWidget {
       ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: 0,
-        selectedItemColor: Colors.green[800],
+        selectedItemColor: Colors.black,
         unselectedItemColor: Colors.grey,
         onTap: (index) {
           final currentRoute = ModalRoute.of(context)?.settings.name;
 
           if (index == 0 && currentRoute != '/home') {
             Navigator.pushNamed(context, '/home');
-          } else if (index == 1 && currentRoute != '/exercise_category') {
-            Navigator.pushNamed(context, '/exercise_category');
+          } else if (index == 1 && currentRoute != '/video_upload') {
+            Navigator.pushNamed(context, '/video_upload');
           } else if (index == 2 && currentRoute != '/history') {
             Navigator.pushNamed(context, '/history');
           } else if (index == 3 && currentRoute != '/settings') {

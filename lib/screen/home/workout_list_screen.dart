@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import '../home/today_workout_screen.dart';
 
 class WorkoutListScreen extends StatelessWidget {
@@ -30,17 +29,17 @@ class WorkoutListScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFAED9A5),
+      backgroundColor: const Color(0xFF20221E), // 배경색
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
         title: const Text(
-            '오늘의 운동',
-            style: TextStyle(color: Colors.black,fontFamily: 'Gamwulchi',)
+          '오늘의 운동',
+          style: TextStyle(color: Colors.white, fontFamily: 'Gamwulchi'),
         ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -60,10 +59,9 @@ class WorkoutListScreen extends StatelessWidget {
                   context,
                   MaterialPageRoute(
                     builder: (_) => TodayWorkoutScreen(
-                      name: workout['name'],
-                      count: rawCount, // 횟수 직접 전달
+                      name: workout['name'] as String,
+                      count: rawCount,
                       calories: workout['calories'] as int,
-                      // accuracy는 0~1 사이의 double이라고 가정하고 100을 곱해 int로 변환
                       accuracy: ((workout['accuracy'] as double) * 100).toInt(),
                       date: date,
                     ),
@@ -74,7 +72,7 @@ class WorkoutListScreen extends StatelessWidget {
                 margin: const EdgeInsets.only(bottom: 16),
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: const Color(0xFFEAEAEA), // 박스 색
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Row(
@@ -105,11 +103,10 @@ class WorkoutListScreen extends StatelessWidget {
       ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: 2,
-        selectedItemColor: Colors.green[800],
+        selectedItemColor: Colors.black,
         unselectedItemColor: Colors.grey,
         onTap: (index) {
           final currentRoute = ModalRoute.of(context)?.settings.name;
-
           if (index == 0 && currentRoute != '/home') {
             Navigator.pushNamed(context, '/home');
           } else if (index == 1 && currentRoute != '/video_upload') {

@@ -49,7 +49,7 @@ class _SplashScreenState extends State<SplashScreen>
   Widget build(BuildContext context) {
     const text = "body log";
     return Scaffold(
-      backgroundColor: const Color(0xFFA3C99C),
+      backgroundColor: const Color(0xFF7E837D),
       body: Center(
         child: Row(
           mainAxisSize: MainAxisSize.min,

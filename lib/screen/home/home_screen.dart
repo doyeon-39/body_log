@@ -117,7 +117,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFAED9A5),
+      backgroundColor: const Color(0xFF20221E),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16),
@@ -126,64 +126,77 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               Padding(
                 padding: const EdgeInsets.only(bottom: 16),
-                child: const Text(
-                  'Main Home', // 고정 타이틀
-                  style: TextStyle(
-                    fontFamily: 'Gamwulchi',
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.green,
-                  ),
+                child: Image.asset(
+                  'assets/logo.png',
+                  width: 120,
+                  height: 120,
+                  fit: BoxFit.contain,
                 ),
               ),
-              GestureDetector(
-                onTap: () {
-                  final String exName = exerciseData['name'] as String;
-                  final int? countVal = (exerciseData['count'] as int?);
 
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => TodayWorkoutScreen(
-                        name: exName,
-                        count: countVal, // ✅ count 인자 전달
-                        calories: exerciseData['calories'] as int,
-                        accuracy: exerciseData['accuracy'] as int,
-                        date: today,
-                      ),
-                    ),
-                  );
-                },
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(16),
-                  margin: const EdgeInsets.only(bottom: 16),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFDFF0D8),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Builder(
-                    builder: (context) {
-                      final String exName = exerciseData['name'] as String;
-                      final int? countVal = (exerciseData['count'] as int?);
+              // ⬇ 변경: 전체 GestureDetector 제거 → 정보 카드 + 하단 버튼(박스)로 분리
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEAEAEA),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Builder(
+                  builder: (context) {
+                    final String exName = exerciseData['name'] as String;
+                    final int? countVal = (exerciseData['count'] as int?);
+                    final String countLabel = (countVal != null ? '${countVal}회' : '-');
 
-                      // 횟수 표시 로직 정의 (countLabel 사용을 위해)
-                      final String countLabel = (countVal != null ? '${countVal}회' : '-');
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        const Text(
+                          '오늘의 운동',
+                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 8),
+                        Text('🏋️ $exName $countLabel'),
+                        Text('🔥 칼로리 소모: ${exerciseData['calories']} kcal'),
+                        const SizedBox(height: 12),
 
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          const Text(
-                            '오늘의 운동',
-                            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                        SizedBox(
+                          width: 150,
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
+                              backgroundColor: const Color(0xFF4E4E4E),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(30),
+                              ),
+                              elevation: 3,
+                            ),
+                            onPressed: () {
+                              final String exName = exerciseData['name'] as String;
+                              final int? countVal = (exerciseData['count'] as int?);
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => TodayWorkoutScreen(
+                                    name: exName,
+                                    count: countVal,
+                                    calories: exerciseData['calories'] as int,
+                                    accuracy: exerciseData['accuracy'] as int,
+                                    date: today,
+                                  ),
+                                ),
+                              );
+                            },
+                            child: const Text(
+                              '확인하기',
+                              style: TextStyle(fontSize: 16, color: Colors.white),
+                            ),
                           ),
-                          const SizedBox(height: 8),
-                          Text('🏋️ $exName $countLabel'), // ✅ countLabel 사용
-                          Text('🔥 칼로리 소모: ${exerciseData['calories']} kcal'),
-                        ],
-                      );
-                    },
-                  ),
+                        ),
+                      ],
+                    );
+                  },
                 ),
               ),
               Container(
@@ -191,7 +204,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 padding: const EdgeInsets.all(16),
                 margin: const EdgeInsets.only(bottom: 16),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFDFF0D8),
+                  color: const Color(0xFFEAEAEA),
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Column(
@@ -206,7 +219,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
-                        backgroundColor: Colors.green,
+                        backgroundColor: const Color(0xFF4E4E4E),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(30),
                         ),
@@ -240,7 +253,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   padding: const EdgeInsets.all(16),
                   margin: const EdgeInsets.only(bottom: 16),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFDFF0D8),
+                    color: const Color(0xFFEAEAEA),
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: const Column(
@@ -262,7 +275,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: 0,
-        selectedItemColor: Colors.green[800],
+        selectedItemColor: Colors.black,
         unselectedItemColor: Colors.grey,
         onTap: (index) {
           final currentRoute = ModalRoute.of(context)?.settings.name;

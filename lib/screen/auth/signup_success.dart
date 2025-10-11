@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../../UI/login_style.dart';
-import '../../../UI/green_button.dart';
 
 class SignupSuccessScreen extends StatelessWidget {
   const SignupSuccessScreen({super.key});
@@ -8,7 +7,8 @@ class SignupSuccessScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: LoginStyle.backgroundColor,
+      // ✅ 배경색 변경
+      backgroundColor: const Color(0xFF20221E),
       body: Center(
         child: Container(
           margin: const EdgeInsets.symmetric(horizontal: 24),
@@ -22,13 +22,36 @@ class SignupSuccessScreen extends StatelessWidget {
             children: [
               const Text(
                 '🎉 회원가입이 완료되었습니다!',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 30),
-              GreenButton(
-                text: '로그인하러 가기',
-                onPressed: () => Navigator.pushReplacementNamed(context, '/login'),
+
+              // ✅ GreenButton → ElevatedButton 교체
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: ElevatedButton(
+                  onPressed: () =>
+                      Navigator.pushReplacementNamed(context, '/login'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF4E4E4E), // 버튼 색상 통일
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: const Text(
+                    '로그인하러 가기',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
               ),
             ],
           ),

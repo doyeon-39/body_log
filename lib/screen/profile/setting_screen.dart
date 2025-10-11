@@ -78,14 +78,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Center(
-                child: Text('설정',
-                    style: TextStyle(fontSize: 24, fontFamily: 'Gamwulchi', fontWeight: FontWeight.bold, color: Colors.green)),
+                child: Text(
+                  '설정',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontFamily: 'Gamwulchi',
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF000000),
+                  ),
+                ),
               ),
               const SizedBox(height: 24),
               const Center(child: Icon(Icons.account_circle, size: 60)),
               const SizedBox(height: 8),
               Center(child: Text(userName, style: const TextStyle(fontSize: 18))),
-              Divider(height: 40, thickness: 2, color: Colors.green[700]),
+              const Divider(height: 40, thickness: 2, color: Color(0xFF20221E)),
 
               Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
                 const Text('이름'),
@@ -95,24 +102,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
               Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
                 const Text('생년월일'),
-                //인바디 입력 없으면 '-' 표시
                 Text(_displayOrDash(birthDate)),
               ]),
               const SizedBox(height: 12),
 
               Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
                 const Text('성별'),
-                //인바디 입력 없으면 '-' 표시
                 Text(_displayOrDash(selectedGender)),
               ]),
 
-              Divider(height: 40, thickness: 2, color: Colors.green[700]),
+              const Divider(height: 40, thickness: 2, color: Color(0xFF20221E)),
 
               ListTile(
                 leading: const Icon(Icons.monitor_weight_outlined),
                 title: const Text('인바디 정보 입력 및 수정'),
                 onTap: () async {
-                  // 인바디 화면에서 돌아오면 데이터 새로고침
                   await Navigator.pushNamed(context, '/inbody');
                   if (!mounted) return;
                   await _loadUserData();
@@ -134,7 +138,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: 3,
-        selectedItemColor: Colors.green[800],
+        selectedItemColor: Colors.black,
         unselectedItemColor: Colors.grey,
         onTap: (index) {
           final currentRoute = ModalRoute.of(context)?.settings.name;

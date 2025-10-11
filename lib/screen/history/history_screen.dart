@@ -55,7 +55,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
     ];
   }
 
-  // ✅ 변경 2: 기준 날짜를 selectedDay로 변경
   Map<String, List<Map<String, dynamic>>> groupDataByDate() {
     Map<String, List<Map<String, dynamic>>> grouped = {};
     final base = selectedDay; // 기존: DateTime.now()
@@ -83,7 +82,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
     final groupedData = groupDataByDate();
 
     return Scaffold(
-      backgroundColor: const Color(0xFFAED9A5),
+      backgroundColor: const Color(0xFF20221E), // ✅ 배경색 변경
       body: Column(
         children: [
           // 상단 제목 + 캘린더 버튼
@@ -98,15 +97,14 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     fontFamily: 'Gamwulchi',
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
-                    color: Colors.green,
+                    color: Colors.white,
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.calendar_today, color: Colors.green),
+                  icon: const Icon(Icons.calendar_today, color: Colors.white),
                   onPressed: () async {
                     DateTime tempSelectedDay = selectedDay;
 
-                    // ✅ 변경 1: StatefulBuilder로 다이얼로그 내부 로컬 setState 사용
                     await showDialog(
                       context: context,
                       builder: (_) => StatefulBuilder(
@@ -194,7 +192,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     margin: const EdgeInsets.all(12),
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFDFF0D8),
+                      color: const Color(0xFFEAEAEA), // ✅ 박스색 변경
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Row(
@@ -237,15 +235,15 @@ class _HistoryScreenState extends State<HistoryScreen> {
       ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: 2,
-        selectedItemColor: Colors.green[800],
+        selectedItemColor: Colors.black,
         unselectedItemColor: Colors.grey,
         onTap: (index) {
           final current = ModalRoute.of(context)?.settings.name;
 
           if (index == 0 && current != '/home') {
             Navigator.pushNamed(context, '/home');
-          } else if (index == 1 && current != '/exercise_category') {
-            Navigator.pushNamed(context, '/exercise_category');
+          } else if (index == 1 && current != '/video_upload') {
+            Navigator.pushNamed(context, '/video_upload');
           } else if (index == 2 && current != '/history') {
             Navigator.pushNamed(context, '/history');
           } else if (index == 3 && current != '/settings') {

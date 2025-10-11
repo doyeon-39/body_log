@@ -1,3 +1,4 @@
+import 'dart:async'; // ← 추가: 폴링용 Timer
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -15,7 +16,9 @@ class VideoUploadScreen extends StatelessWidget {
   String _resolveExerciseName(BuildContext context) {
     String effective = exerciseName ?? '스쿼트';
     final args = ModalRoute.of(context)?.settings.arguments;
-    if (args is Map && args['exerciseName'] is String && (args['exerciseName'] as String).isNotEmpty) {
+    if (args is Map &&
+        args['exerciseName'] is String &&
+        (args['exerciseName'] as String).isNotEmpty) {
       effective = args['exerciseName'] as String;
     }
     return effective;
@@ -23,13 +26,13 @@ class VideoUploadScreen extends StatelessWidget {
 
   String _baseHost() {
     if (kIsWeb) return '127.0.0.1';
-    if (Platform.isAndroid) return '10.0.2.2'; // Android 에뮬레이터
-    return '127.0.0.1';                        // iOS 시뮬레이터/데스크톱
+    if (Platform.isAndroid) return '10.0.2.2';
+    return '127.0.0.1';
   }
 
   Future<void> _uploadFile(BuildContext context, File videoFile, String exercise) async {
     final host = _baseHost();
-    final uri = Uri.parse('http://$host:8000/api/v1/exercise/analyze'); // 동기 분석 엔드포인트
+    final uri = Uri.parse('http://$host:8000/api/v1/exercise/analyze');
 
     final request = http.MultipartRequest('POST', uri);
 
@@ -39,49 +42,33 @@ class VideoUploadScreen extends StatelessWidget {
       request.headers['Authorization'] = 'Bearer $token';
     }
 
-    // 파일만 전송 (서버에 영구 저장 없음)
     request.files.add(await http.MultipartFile.fromPath('file', videoFile.path));
 
     final streamed = await request.send();
     final resp = await http.Response.fromStream(streamed);
 
-    if (resp.statusCode == 200) {
-      final data = jsonDecode(resp.body);
-
-      int _pickInt(dynamic v, {int fallback = 0}) {
-        if (v is int) return v;
-        if (v is double) return v.toInt();
-        if (v is String) return int.tryParse(v) ?? fallback;
-        return fallback;
+    // job_id 반환해야됨
+    if (resp.statusCode == 202) {
+      final body = resp.body.isNotEmpty ? resp.body : '{}';
+      final data = jsonDecode(body) as Map<String, dynamic>;
+      final jobId = data['job_id'] as String?;
+      if (jobId == null || jobId.isEmpty) {
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('job_id가 없습니다. 다시 시도해주세요.')),
+        );
+        return;
       }
-      final repCount = _pickInt(data['rep_count'] ?? data['count']);
-      final calories = _pickInt(data['calories']);
-
-      // 서버가 내려준 workout_id (필요 시 이후 화면/히스토리 연동에 사용 가능)
-      // final workoutId = _pickInt(data['workout_id']);
 
       if (!context.mounted) return;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('분석 완료!')),
-      );
-
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => VideoAnalysisScreen(
-            videoFile: videoFile,
-            exercise: exercise, // UI 표기용
-            count: repCount,
-            calories: calories,
-          ),
-        ),
-      );
-    } else {
-      final msg = '분석 실패 (${resp.statusCode}) ${resp.body.isNotEmpty ? resp.body : ''}';
-      if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+      _showProgressDialog(context);
+      await _pollJobUntilDone(context, jobId, exercise, localFile: videoFile);
+      return;
     }
+
+    final msg = '분석 요청 실패 (${resp.statusCode}) ${resp.body.isNotEmpty ? resp.body : ''}';
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 
   Future<void> _pickAndUpload(BuildContext context, String exercise) async {
@@ -108,38 +95,51 @@ class VideoUploadScreen extends StatelessWidget {
     final exercise = _resolveExerciseName(context);
 
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(title: Text('영상 업로드 - $exercise')),
-      body: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            ElevatedButton.icon(
-              onPressed: () => _openCameraRecorder(context, exercise),
-              icon: const Icon(Icons.videocam, color: Colors.white),
-              label: const Text('실시간 촬영', style: TextStyle(color: Colors.white)),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green.shade200,
-                minimumSize: const Size.fromHeight(60),
-              ),
+      backgroundColor: const Color(0xFF20221E),
+
+      body: SafeArea(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ElevatedButton.icon(
+                  onPressed: () => _openCameraRecorder(context, exercise),
+                  icon: const Icon(Icons.videocam, color: Colors.black),
+                  label: const Text('동영상 촬영', style: TextStyle(color: Colors.black, fontSize: 20, )),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFEAEAEA),
+                    minimumSize: const Size.fromHeight(60),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    elevation: 3,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                ElevatedButton.icon(
+                  onPressed: () => _pickAndUpload(context, exercise),
+                  icon: const Icon(Icons.upload_file, color: Colors.black),
+                  label: const Text('동영상 파일 업로드', style: TextStyle(color: Colors.black, fontSize: 20, )),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFEAEAEA),
+                    minimumSize: const Size.fromHeight(60),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    elevation: 3,
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 20),
-            ElevatedButton.icon(
-              onPressed: () => _pickAndUpload(context, exercise),
-              icon: const Icon(Icons.upload_file, color: Colors.white),
-              label: const Text('동영상 파일 업로드', style: TextStyle(color: Colors.white)),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green.shade200,
-                minimumSize: const Size.fromHeight(60),
-              ),
-            ),
-          ],
+          ),
         ),
       ),
+
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: 1,
-        selectedItemColor: Colors.green[800],
+        selectedItemColor: Colors.black,
         unselectedItemColor: Colors.grey,
         onTap: (index) {
           final currentRoute = ModalRoute.of(context)?.settings.name;
@@ -161,6 +161,134 @@ class VideoUploadScreen extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  void _showProgressDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Dialog(
+        backgroundColor: Colors.black87,
+        child: Padding(
+          padding: EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(height: 16),
+              Text('분석 중입니다...', style: TextStyle(color: Colors.white)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+  Future<void> _pollJobUntilDone(
+      BuildContext context,
+      String jobId,
+      String exercise, {
+        required File localFile,
+      }) async {
+    final host = _baseHost();
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('access_token');
+
+    Timer? timer;
+    bool finished = false;
+
+    Future<void> closeDialogAnd(void Function() then) async {
+      if (!finished) {
+        finished = true;
+        if (context.mounted) {
+          Navigator.of(context, rootNavigator: true).pop(); // 로딩창 닫기
+          then();
+        }
+      }
+    }
+
+    // 0.9초 간격 폴링
+    timer = Timer.periodic(const Duration(milliseconds: 900), (t) async {
+      if (!context.mounted) return;
+
+      final uri = Uri.parse('http://$host:8000/api/v1/exercise/status/$jobId');
+      final headers = <String, String>{};
+      if (token != null && token.isNotEmpty) {
+        headers['Authorization'] = 'Bearer $token';
+      }
+
+      final res = await http.get(uri, headers: headers);
+      if (res.statusCode != 200) {
+        timer?.cancel();
+        await closeDialogAnd(() {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('상태 조회 실패: ${res.statusCode}')),
+          );
+        });
+        return;
+      }
+
+      final j = jsonDecode(res.body) as Map<String, dynamic>;
+      final status = (j['status'] as String?) ?? 'queued';
+
+      if (status == 'done') {
+        timer?.cancel();
+        final result = j['result'] as Map<String, dynamic>?;
+
+        await closeDialogAnd(() {
+          if (result == null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('결과가 비어있습니다.')),
+            );
+            return;
+          }
+
+          final int count = (() {
+            final v = result['rep_count'];
+            if (v is num) return v.toInt();
+            return int.tryParse('$v') ?? 0;
+          })();
+
+          final int calories = (() {
+            final v = result['calories'];
+            if (v is num) return v.toInt();
+            return int.tryParse('$v') ?? 0;
+          })();
+
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => VideoAnalysisScreen(
+                videoFile: localFile,
+                exercise: exercise,
+                count: count,
+                calories: calories,
+              ),
+            ),
+          );
+        });
+      } else if (status == 'failed') {
+        timer?.cancel();
+        final err = j['error']?.toString() ?? '알 수 없는 오류';
+        await closeDialogAnd(() {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('분석 실패: $err')),
+          );
+        });
+      } else {
+      }
+    });
+
+    // 타임아웃 (예: 2분)
+    Future.delayed(const Duration(minutes: 2), () async {
+      if ((timer?.isActive ?? false) && !finished) {
+        timer?.cancel();
+        await closeDialogAnd(() {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('분석이 지연되고 있습니다. 나중에 다시 시도해주세요.')),
+          );
+        });
+      }
+    });
   }
 }
 
@@ -226,13 +354,16 @@ class _CameraRecorderSheetState extends State<_CameraRecorderSheet> {
               return const Center(child: CircularProgressIndicator());
             }
             if (_controller == null || !_controller!.value.isInitialized) {
-              return const Center(child: Text('카메라 초기화 실패', style: TextStyle(color: Colors.white)));
+              return const Center(
+                child: Text('카메라 초기화 실패', style: TextStyle(color: Colors.white)),
+              );
             }
             return Stack(
               children: [
                 Positioned.fill(child: CameraPreview(_controller!)),
                 Positioned(
-                  left: 16, top: 16,
+                  left: 16,
+                  top: 16,
                   child: IconButton(
                     icon: const Icon(Icons.close, color: Colors.white),
                     onPressed: () => Navigator.pop(context),
@@ -244,12 +375,21 @@ class _CameraRecorderSheetState extends State<_CameraRecorderSheet> {
                     padding: const EdgeInsets.only(bottom: 32),
                     child: ElevatedButton.icon(
                       onPressed: _toggleRecord,
-                      icon: Icon(_isRecording ? Icons.stop : Icons.fiber_manual_record, color: Colors.white),
-                      label: Text(_isRecording ? '녹화 중지' : '녹화 시작', style: const TextStyle(color: Colors.white)),
+                      icon: Icon(
+                        _isRecording ? Icons.stop : Icons.fiber_manual_record,
+                        color: Colors.white,
+                      ),
+                      label: Text(
+                        _isRecording ? '녹화 중지' : '녹화 시작',
+                        style: const TextStyle(color: Colors.white),
+                      ),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: _isRecording ? Colors.redAccent : Colors.green.shade600,
+                        backgroundColor:
+                        _isRecording ? Colors.redAccent : Colors.green.shade600,
                         minimumSize: const Size(220, 56),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(28),
+                        ),
                       ),
                     ),
                   ),

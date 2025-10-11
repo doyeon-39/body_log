@@ -169,7 +169,15 @@ class _InbodyScreenState extends State<InbodyScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('인바디 정보 입력'),
+        title: const Text(
+          '인바디 정보 입력',
+          style: TextStyle(
+            fontSize: 24,
+            fontFamily: 'Gamwulchi',
+            fontWeight: FontWeight.bold,
+            color: Colors.black, // 글씨 색상 (필요 시 조정)
+          ),
+        ),
         centerTitle: true,
         backgroundColor: Colors.white,),
       body: SafeArea(
@@ -233,7 +241,7 @@ class _InbodyScreenState extends State<InbodyScreen> {
                       }
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green[700],
+                      backgroundColor: const Color(0xFF4E4E4E),
                       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 32),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(24),
@@ -252,7 +260,7 @@ class _InbodyScreenState extends State<InbodyScreen> {
       ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: 3,
-        selectedItemColor: Colors.green[800],
+        selectedItemColor: Colors.black,
         unselectedItemColor: Colors.grey,
         onTap: (index) {
           final currentRoute = ModalRoute.of(context)?.settings.name;

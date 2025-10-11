@@ -4,7 +4,6 @@ import 'package:http/http.dart' as http;
 
 import '../../../UI/login_style.dart';
 import '../../../UI/input_field.dart';
-import '../../../UI/green_button.dart';
 
 class ResetPasswordScreen extends StatefulWidget {
   final String username;
@@ -107,7 +106,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: LoginStyle.backgroundColor,
+      backgroundColor: const Color(0xFF20221E),
       body: Center(
         child: SingleChildScrollView(
           child: Container(
@@ -122,6 +121,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
               children: [
                 const Text('비밀번호 재설정', style: LoginStyle.logoStyle),
                 const SizedBox(height: 20),
+
                 InputField(
                   controller: newPasswordController,
                   hint: '새 비밀번호',
@@ -132,10 +132,32 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                   hint: '비밀번호 확인',
                   obscure: true,
                 ),
+
                 const SizedBox(height: 10),
+
                 isLoading
                     ? const CircularProgressIndicator()
-                    : GreenButton(text: '비밀번호 변경', onPressed: resetPassword),
+                    : SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: ElevatedButton(
+                    onPressed: resetPassword,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF4E4E4E), // 버튼색
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: const Text(
+                      '비밀번호 변경',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
               ],
             ),
           ),

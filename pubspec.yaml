@@ -33,11 +33,12 @@ flutter:
 
   assets:
     - assets/squat.png
-    - assets/pushup.png
-    - assets/lunge.png
     - assets/default.png
     - assets/jumping_jack.png
-
+    - assets/logo.png
+    - assets/logo2.png
+    - assets/pushup.png
+    - assets/pullup.png
   fonts:
     - family: Gamwulchi
       fonts:
